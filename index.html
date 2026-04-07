@@ -199,6 +199,49 @@ h2{font-size:1.1rem;font-weight:600;margin:20px 0 10px;color:var(--text)}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── CRYPTO ── */
+.crypto-section{margin-top:18px;margin-bottom:14px}
+.crypto-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+}
+.crypto-header h2{margin:0}
+.crypto-total-banner{
+  background:linear-gradient(135deg,#1a1535,#1e1740);
+  border:1px solid #2d2555;border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:10px;position:relative;overflow:hidden;
+}
+.crypto-total-banner::before{
+  content:'';position:absolute;top:-15px;right:-15px;width:60px;height:60px;
+  background:var(--orange);opacity:.07;border-radius:50%;
+}
+.crypto-coin{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:8px;
+}
+.crypto-coin .coin-icon{
+  width:36px;height:36px;border-radius:50%;background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  flex-shrink:0;overflow:hidden;
+}
+.crypto-coin .coin-icon img{width:100%;height:100%;object-fit:cover}
+.crypto-coin .coin-info{flex:1;min-width:0}
+.crypto-coin .coin-name{font-weight:600;font-size:.88rem}
+.crypto-coin .coin-qty{font-size:.7rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.crypto-coin .coin-vals{text-align:right;flex-shrink:0}
+.crypto-coin .coin-val{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.9rem}
+.crypto-coin .coin-pnl{font-size:.72rem;font-family:'JetBrains Mono',monospace}
+.crypto-add-form{display:none;margin-bottom:10px}
+.crypto-add-form.show{display:block}
+.crypto-refresh{
+  background:none;border:1px solid var(--border);border-radius:8px;
+  color:var(--muted);padding:5px 10px;font-size:.7rem;cursor:pointer;
+  font-family:'Outfit',sans-serif;
+}
+.crypto-refresh:active{opacity:.6}
+.spin{animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -219,6 +262,29 @@ h2{font-size:1.1rem;font-weight:600;margin:20px 0 10px;color:var(--text)}
   <div class="subtitle" id="today-label"></div>
   <div id="balance-banner"></div>
   <div class="metric-row" id="top-metrics"></div>
+
+  <!-- ── CRYPTO SECTION ── -->
+  <div class="crypto-section">
+    <div class="crypto-header">
+      <h2>₿ Crypto Portfolio</h2>
+      <div style="display:flex;gap:6px">
+        <button class="crypto-refresh" onclick="fetchCryptoPrices()">🔄 Aggiorna</button>
+        <button class="crypto-refresh" onclick="toggleCryptoForm()">➕ Aggiungi</button>
+      </div>
+    </div>
+    <div id="crypto-add-form" class="crypto-add-form card">
+      <div class="form-group"><label>Crypto (es: bitcoin, ethereum, solana)</label><input type="text" id="crypto-id" placeholder="bitcoin"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Quantità</label><input type="number" id="crypto-qty" step="any" placeholder="0.5"></div>
+        <div class="form-group"><label>Prezzo Carico (€)</label><input type="number" id="crypto-cost" step="any" placeholder="45000"></div>
+      </div>
+      <button class="btn btn-blue" onclick="addCrypto()" style="margin-top:4px">Aggiungi Crypto</button>
+    </div>
+    <div id="crypto-total-banner"></div>
+    <div id="crypto-list"></div>
+    <div id="crypto-status" style="font-size:.68rem;color:var(--muted);margin-top:4px;text-align:center"></div>
+  </div>
+
   <div class="cal-nav">
     <button onclick="calPrev()">◀</button>
     <span class="month-title" id="cal-month-title"></span>
@@ -371,7 +437,7 @@ function loadData(){
   try{ return JSON.parse(localStorage.getItem('finance_data')) || defaultData(); }
   catch(e){ return defaultData(); }
 }
-function defaultData(){ return {incomes:[],expenses:[],subscriptions:[],savings_goals:[],budgets:[]}; }
+function defaultData(){ return {incomes:[],expenses:[],subscriptions:[],savings_goals:[],budgets:[],crypto:[]}; }
 function saveData(){ localStorage.setItem('finance_data', JSON.stringify(D)); }
 let D = loadData();
 let nextId = (arr) => arr.length ? Math.max(...arr.map(x=>x.id||0))+1 : 1;
@@ -780,10 +846,134 @@ function renderBudget(){
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// CRYPTO
+// ════════════════════════════════════════════════════════════════════════════
+if(!D.crypto) D.crypto = []; // migration for existing data
+let cryptoPrices = {}; // {id: {eur, eur_24h_change, image}}
+
+function toggleCryptoForm(){
+  document.getElementById('crypto-add-form').classList.toggle('show');
+}
+
+function addCrypto(){
+  const id = document.getElementById('crypto-id').value.trim().toLowerCase();
+  const qty = parseFloat(document.getElementById('crypto-qty').value);
+  const cost = parseFloat(document.getElementById('crypto-cost').value);
+  if(!id||!qty||qty<=0||!cost||cost<=0) return alert('Compila tutti i campi');
+  D.crypto.push({id: nextId(D.crypto), coin: id, qty, avg_cost: cost});
+  saveData();
+  document.getElementById('crypto-id').value='';
+  document.getElementById('crypto-qty').value='';
+  document.getElementById('crypto-cost').value='';
+  document.getElementById('crypto-add-form').classList.remove('show');
+  fetchCryptoPrices();
+}
+
+function deleteCrypto(id){
+  if(!confirm('Eliminare questa crypto?')) return;
+  D.crypto = D.crypto.filter(c=>c.id!==id); saveData(); renderCrypto();
+}
+
+async function fetchCryptoPrices(){
+  if(!D.crypto.length){ renderCrypto(); return; }
+  const statusEl = document.getElementById('crypto-status');
+  statusEl.innerHTML = '<span class="spin" style="display:inline-block">🔄</span> Aggiornamento prezzi...';
+  const coins = [...new Set(D.crypto.map(c=>c.coin))].join(',');
+  try{
+    const resp = await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=eur&ids=${coins}&order=market_cap_desc&sparkline=false&price_change_percentage=24h`);
+    if(!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    data.forEach(c=>{
+      cryptoPrices[c.id] = {
+        eur: c.current_price,
+        change24h: c.price_change_percentage_24h || 0,
+        image: c.image,
+        symbol: c.symbol.toUpperCase(),
+        name: c.name
+      };
+    });
+    // Cache prices
+    localStorage.setItem('crypto_prices', JSON.stringify(cryptoPrices));
+    localStorage.setItem('crypto_prices_time', Date.now().toString());
+    statusEl.textContent = 'Aggiornato: ' + new Date().toLocaleTimeString('it-IT');
+  } catch(e){
+    // Try loading from cache
+    try{
+      const cached = JSON.parse(localStorage.getItem('crypto_prices'));
+      const cachedTime = parseInt(localStorage.getItem('crypto_prices_time'));
+      if(cached){ cryptoPrices = cached; statusEl.textContent = 'Cache: ' + new Date(cachedTime).toLocaleTimeString('it-IT') + ' (offline)'; }
+      else { statusEl.textContent = '⚠️ Impossibile aggiornare i prezzi'; }
+    } catch(e2){ statusEl.textContent = '⚠️ Impossibile aggiornare i prezzi'; }
+  }
+  renderCrypto();
+}
+
+function renderCrypto(){
+  const listEl = document.getElementById('crypto-list');
+  const bannerEl = document.getElementById('crypto-total-banner');
+
+  if(!D.crypto.length){
+    listEl.innerHTML = '<div class="empty-state" style="padding:14px">Nessuna crypto nel portfolio</div>';
+    bannerEl.innerHTML = '';
+    return;
+  }
+
+  let totalValue = 0, totalCost = 0;
+  let html = '';
+  D.crypto.forEach(c=>{
+    const p = cryptoPrices[c.coin];
+    const currentPrice = p ? p.eur : 0;
+    const value = c.qty * currentPrice;
+    const cost = c.qty * c.avg_cost;
+    const pnl = value - cost;
+    const pnlPct = cost > 0 ? ((pnl/cost)*100) : 0;
+    const change24 = p ? p.change24h : 0;
+    totalValue += value;
+    totalCost += cost;
+
+    const icon = p && p.image ? `<img src="${p.image}" alt="">` : '🪙';
+    const name = p ? p.name : c.coin;
+    const symbol = p ? p.symbol : c.coin.toUpperCase();
+
+    html += `<div class="crypto-coin">
+      <div class="coin-icon">${icon}</div>
+      <div class="coin-info">
+        <div class="coin-name">${name} <span style="color:var(--muted);font-weight:400;font-size:.75rem">${symbol}</span></div>
+        <div class="coin-qty">${c.qty} @ ${fmtMoney(c.avg_cost)}</div>
+        <div class="coin-qty" style="color:${change24>=0?'var(--green)':'var(--red)'}">24h: ${change24>=0?'+':''}${change24.toFixed(2)}%</div>
+      </div>
+      <div class="coin-vals">
+        <div class="coin-val">${fmtMoney(value)}</div>
+        <div class="coin-pnl ${pnl>=0?'green':'red'}">${pnl>=0?'+':''}${fmtMoney(pnl)} (${pnlPct>=0?'+':''}${pnlPct.toFixed(1)}%)</div>
+      </div>
+      <button class="del-btn" onclick="deleteCrypto(${c.id})">✕</button>
+    </div>`;
+  });
+  listEl.innerHTML = html;
+
+  const totalPnl = totalValue - totalCost;
+  const totalPnlPct = totalCost > 0 ? ((totalPnl/totalCost)*100) : 0;
+  bannerEl.innerHTML = `<div class="crypto-total-banner">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Valore Portfolio Crypto</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--orange);margin-top:2px">${fmtMoney(totalValue)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px">P&L Totale</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;margin-top:2px" class="${totalPnl>=0?'green':'red'}">${totalPnl>=0?'+':''}${fmtMoney(totalPnl)}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem" class="${totalPnlPct>=0?'green':'red'}">(${totalPnlPct>=0?'+':''}${totalPnlPct.toFixed(1)}%)</div>
+      </div>
+    </div>
+    <div style="font-size:.68rem;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace">Investito: ${fmtMoney(totalCost)}</div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // RENDER ALL
 // ════════════════════════════════════════════════════════════════════════════
 function renderAll(){
-  renderCalendar(); renderIncome(); renderExpenses(); renderSubs(); renderGoals(); renderBudget();
+  renderCalendar(); renderIncome(); renderExpenses(); renderSubs(); renderGoals(); renderBudget(); renderCrypto();
 }
 
 // ── Init ──
@@ -793,6 +983,9 @@ document.getElementById('exp-date').value = todayStr();
 const nextYear = new Date(); nextYear.setFullYear(nextYear.getFullYear()+1);
 document.getElementById('goal-deadline').value = nextYear.toISOString().split('T')[0];
 renderAll();
+// Load cached crypto prices then fetch fresh
+try{ const cached = JSON.parse(localStorage.getItem('crypto_prices')); if(cached) cryptoPrices = cached; renderCrypto(); } catch(e){}
+fetchCryptoPrices();
 </script>
 </body>
 </html>
