@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Finance">
+<meta name="theme-color" content="#0b0e18">
+<title>Finance Manager</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjMGIwZTE4Ii8+PHRleHQgeD0iOTAiIHk9IjEyMCIgZm9udC1zaXplPSIxMDAiIHRleHQtYW5jaG9yPSJtaWRkbGUiPvCfkrA8L3RleHQ+PC9zdmc+">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiRmluYW5jZSBNYW5hZ2VyIiwic2hvcnRfbmFtZSI6IkZpbmFuY2UiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBiMGUxOCIsInRoZW1lX2NvbG9yIjoiIzBiMGUxOCJ9">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0b0e18;--bg2:#121627;--bg3:#1a1f35;--border:#252a42;
+  --green:#00e09e;--red:#ff5c72;--blue:#5b8def;--yellow:#ffc94a;--purple:#a78bfa;--orange:#ff9f43;
+  --text:#e4e6f0;--muted:#6b7194;
+  --radius:14px;
+}
+html,body{
+  font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;min-height:100dvh;overflow-x:hidden;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+
+/* ── NAV ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;z-index:100;
+  padding-bottom:env(safe-area-inset-bottom,8px);
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:10px 4px 6px;background:none;border:none;color:var(--muted);
+  font-family:'Outfit',sans-serif;font-size:.65rem;font-weight:500;
+  cursor:pointer;transition:color .2s;
+}
+.nav-btn.active{color:var(--green)}
+.nav-btn .ico{font-size:1.3rem}
+
+/* ── PAGE ── */
+.page{display:none;padding:16px 16px 100px;animation:fadeUp .3s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+h1{font-size:1.4rem;font-weight:700;margin-bottom:4px}
+h2{font-size:1.1rem;font-weight:600;margin:20px 0 10px;color:var(--text)}
+.subtitle{font-size:.75rem;color:var(--muted);margin-bottom:16px}
+
+/* ── CARDS ── */
+.card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:10px;
+}
+.metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
+.metric .label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.metric .val{font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:600}
+.green{color:var(--green)}.red{color:var(--red)}.blue{color:var(--blue)}.yellow{color:var(--yellow)}.purple{color:var(--purple)}.orange{color:var(--orange)}
+
+/* ── BALANCE BANNER ── */
+.balance-banner{
+  background:linear-gradient(135deg,var(--bg2),var(--bg3));
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:14px;position:relative;overflow:hidden;
+}
+.balance-banner::before{
+  content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+  background:var(--green);opacity:.06;border-radius:50%;
+}
+.balance-banner .lbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px}
+.balance-banner .amt{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;margin:4px 0}
+.balance-banner .detail{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
+.form-group input,.form-group select{
+  width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;
+  outline:none;transition:border-color .2s;
+}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{
+  width:100%;padding:13px;border:none;border-radius:12px;font-family:'Outfit',sans-serif;
+  font-size:.9rem;font-weight:600;cursor:pointer;transition:transform .15s,opacity .15s;
+}
+.btn:active{transform:scale(.97);opacity:.8}
+.btn-green{background:var(--green);color:#0b0e18}
+.btn-red{background:var(--red);color:#fff}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-small{
+  padding:8px 14px;font-size:.75rem;border-radius:8px;width:auto;
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);
+}
+
+/* ── LIST ITEMS ── */
+.list-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 14px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:8px;
+}
+.list-item .info{flex:1;min-width:0}
+.list-item .info .title{font-weight:500;font-size:.88rem}
+.list-item .info .sub{font-size:.72rem;color:var(--muted);margin-top:2px}
+.list-item .amount{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.95rem;white-space:nowrap;margin-left:10px}
+.list-item .del-btn{
+  background:none;border:none;color:var(--red);font-size:1rem;cursor:pointer;
+  margin-left:10px;padding:4px;opacity:.5;transition:opacity .2s;
+}
+.list-item .del-btn:hover,.list-item .del-btn:active{opacity:1}
+
+/* ── PROGRESS ── */
+.progress-bg{background:var(--bg);border-radius:8px;height:10px;overflow:hidden;margin:6px 0}
+.progress-fill{height:100%;border-radius:8px;transition:width .5s ease}
+
+/* ── GOAL WEEKLY BOX ── */
+.weekly-box{
+  margin-top:8px;padding:8px 12px;background:rgba(167,139,250,.08);
+  border-left:3px solid var(--purple);border-radius:0 8px 8px 0;
+  font-size:.78rem;
+}
+.weekly-box strong{font-family:'JetBrains Mono',monospace;color:var(--purple)}
+
+/* ── CALENDAR ── */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav button{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  color:var(--text);padding:8px 16px;font-size:.85rem;cursor:pointer;
+  font-family:'Outfit',sans-serif;
+}
+.cal-nav .month-title{font-size:1.05rem;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-hdr{text-align:center;font-size:.62rem;color:var(--muted);padding:6px 0;text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.cal-cell{
+  text-align:center;padding:8px 2px;border-radius:10px;font-size:.78rem;
+  min-height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s;position:relative;
+}
+.cal-cell:active{background:var(--bg3)}
+.cal-cell.today{background:var(--blue);color:#fff;font-weight:700}
+.cal-cell.empty{pointer-events:none}
+.cal-dots{display:flex;gap:3px;margin-top:3px}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-dot.i{background:var(--green)}.cal-dot.e{background:var(--red)}.cal-dot.s{background:var(--yellow)}.cal-dot.g{background:var(--purple)}
+
+.cal-legend{display:flex;gap:14px;margin-top:10px;font-size:.68rem;color:var(--muted);flex-wrap:wrap}
+.cal-legend span{display:flex;align-items:center;gap:4px}
+
+/* ── DAY DETAIL MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);
+  z-index:200;align-items:flex-end;justify-content:center;
+  animation:fadeIn .2s;
+}
+.modal-overlay.show{display:flex}
+.modal-sheet{
+  background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:500px;
+  max-height:70vh;overflow-y:auto;padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0));
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 14px}
+.modal-title{font-size:1rem;font-weight:600;margin-bottom:12px}
+
+/* ── BUDGET BAR ── */
+.budget-item{margin-bottom:12px}
+.budget-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.budget-header .cat{font-size:.85rem;font-weight:500}
+.budget-tag{
+  display:inline-block;padding:2px 10px;border-radius:20px;font-size:.65rem;font-weight:600;
+}
+.tag-ok{background:rgba(0,224,158,.12);color:var(--green)}
+.tag-warn{background:rgba(255,201,74,.12);color:var(--yellow)}
+.tag-danger{background:rgba(255,92,114,.12);color:var(--red)}
+.budget-nums{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);margin-top:3px}
+
+/* ── TOGGLE ── */
+.toggle{
+  position:relative;width:44px;height:26px;background:var(--bg);border-radius:13px;
+  border:1px solid var(--border);cursor:pointer;transition:background .2s;flex-shrink:0;
+}
+.toggle.on{background:var(--green);border-color:var(--green)}
+.toggle::after{
+  content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;
+  background:#fff;border-radius:50%;transition:transform .2s;
+}
+.toggle.on::after{transform:translateX(18px)}
+
+.empty-state{text-align:center;padding:30px 20px;color:var(--muted);font-size:.85rem}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- ════ BOTTOM NAV ════ -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchPage('calendar')"><span class="ico">📅</span>Calendario</button>
+  <button class="nav-btn" onclick="switchPage('income')"><span class="ico">💵</span>Entrate</button>
+  <button class="nav-btn" onclick="switchPage('expenses')"><span class="ico">💳</span>Uscite</button>
+  <button class="nav-btn" onclick="switchPage('subs')"><span class="ico">🔄</span>Abbon.</button>
+  <button class="nav-btn" onclick="switchPage('goals')"><span class="ico">🎯</span>Obiettivi</button>
+  <button class="nav-btn" onclick="switchPage('budget')"><span class="ico">📊</span>Budget</button>
+</nav>
+
+<!-- ════ CALENDAR PAGE ════ -->
+<div id="page-calendar" class="page active">
+  <h1>💰 Finance Manager</h1>
+  <div class="subtitle" id="today-label"></div>
+  <div id="balance-banner"></div>
+  <div class="metric-row" id="top-metrics"></div>
+  <div class="cal-nav">
+    <button onclick="calPrev()">◀</button>
+    <span class="month-title" id="cal-month-title"></span>
+    <button onclick="calNext()">▶</button>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div class="cal-legend">
+    <span><span class="cal-dot i"></span> Entrata</span>
+    <span><span class="cal-dot e"></span> Uscita</span>
+    <span><span class="cal-dot s"></span> Abbonamento</span>
+    <span><span class="cal-dot g"></span> Obiettivo</span>
+  </div>
+</div>
+
+<!-- ════ INCOME PAGE ════ -->
+<div id="page-income" class="page">
+  <h1>💵 Entrate</h1>
+  <div class="subtitle">Registra i tuoi stipendi settimanali</div>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Data</label><input type="date" id="inc-date"></div>
+      <div class="form-group"><label>Importo €</label><input type="number" id="inc-amount" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-group"><label>Fonte</label><input type="text" id="inc-source" placeholder="Es: Pizzeria, Freelance..."></div>
+    <div class="form-group"><label>Note</label><input type="text" id="inc-note" placeholder="Opzionale"></div>
+    <button class="btn btn-green" onclick="addIncome()">➕ Aggiungi Entrata</button>
+  </div>
+  <h2>Storico</h2>
+  <div id="income-list"></div>
+  <h2>Riepilogo Settimanale</h2>
+  <div id="income-weekly"></div>
+</div>
+
+<!-- ════ EXPENSES PAGE ════ -->
+<div id="page-expenses" class="page">
+  <h1>💳 Uscite</h1>
+  <div class="subtitle">Registra le tue spese</div>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Data</label><input type="date" id="exp-date"></div>
+      <div class="form-group"><label>Importo €</label><input type="number" id="exp-amount" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-group"><label>Categoria</label>
+      <select id="exp-cat">
+        <option>🍕 Cibo & Ristoranti</option><option>🚗 Trasporti</option><option>🛒 Spesa</option>
+        <option>🎉 Svago & Uscite</option><option>👕 Abbigliamento</option><option>🏠 Casa</option>
+        <option>💊 Salute</option><option>📚 Istruzione</option><option>🎁 Regali</option><option>🔧 Altro</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Note</label><input type="text" id="exp-note" placeholder="Opzionale"></div>
+    <button class="btn btn-red" onclick="addExpense()">➕ Aggiungi Uscita</button>
+  </div>
+  <h2>Storico</h2>
+  <div id="expense-list"></div>
+  <h2>Per Categoria (Mese)</h2>
+  <div id="expense-cats"></div>
+</div>
+
+<!-- ════ SUBSCRIPTIONS PAGE ════ -->
+<div id="page-subs" class="page">
+  <h1>🔄 Abbonamenti</h1>
+  <div class="subtitle">Gestisci i tuoi abbonamenti mensili</div>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Nome</label><input type="text" id="sub-name" placeholder="Es: Spotify, Netflix..."></div>
+      <div class="form-group"><label>Costo €/mese</label><input type="number" id="sub-amount" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Giorno Addebito</label><input type="number" id="sub-day" min="1" max="31" value="1"></div>
+      <div class="form-group"><label>Categoria</label>
+        <select id="sub-cat">
+          <option>🎵 Musica</option><option>🎬 Streaming</option><option>💪 Fitness</option>
+          <option>📱 Telefonia</option><option>☁️ Cloud/Software</option><option>📰 News</option>
+          <option>🎮 Gaming</option><option>🔧 Altro</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-blue" onclick="addSub()">➕ Aggiungi Abbonamento</button>
+  </div>
+  <div id="subs-total" style="font-size:.85rem;margin:12px 0;color:var(--muted)"></div>
+  <div id="subs-list"></div>
+</div>
+
+<!-- ════ GOALS PAGE ════ -->
+<div id="page-goals" class="page">
+  <h1>🎯 Obiettivi</h1>
+  <div class="subtitle">Pianifica il tuo risparmio</div>
+  <div class="card">
+    <div class="form-group"><label>Nome Obiettivo</label><input type="text" id="goal-name" placeholder="Es: Australia, Auto..."></div>
+    <div class="form-row">
+      <div class="form-group"><label>Obiettivo €</label><input type="number" id="goal-target" step="1" placeholder="0"></div>
+      <div class="form-group"><label>Scadenza</label><input type="date" id="goal-deadline"></div>
+    </div>
+    <div class="form-group"><label>Descrizione</label><input type="text" id="goal-note" placeholder="Opzionale"></div>
+    <button class="btn btn-blue" onclick="addGoal()">🎯 Crea Obiettivo</button>
+  </div>
+  <div id="goals-list"></div>
+  <div id="add-savings-section" style="display:none">
+    <h2>💰 Aggiungi Risparmio</h2>
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group"><label>Obiettivo</label><select id="save-goal"></select></div>
+        <div class="form-group"><label>Importo €</label><input type="number" id="save-amount" step="1" placeholder="0"></div>
+      </div>
+      <button class="btn btn-green" onclick="addSaving()">💰 Aggiungi al Risparmio</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ BUDGET PAGE ════ -->
+<div id="page-budget" class="page">
+  <h1>📊 Budget</h1>
+  <div class="subtitle">Imposta limiti di spesa mensili</div>
+  <div class="card">
+    <div class="form-row">
+      <div class="form-group"><label>Categoria</label>
+        <select id="bud-cat">
+          <option>🍕 Cibo & Ristoranti</option><option>🚗 Trasporti</option><option>🛒 Spesa</option>
+          <option>🎉 Svago & Uscite</option><option>👕 Abbigliamento</option><option>🏠 Casa</option>
+          <option>💊 Salute</option><option>📚 Istruzione</option><option>🎁 Regali</option><option>🔧 Altro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Limite €/mese</label><input type="number" id="bud-limit" step="1" placeholder="0"></div>
+    </div>
+    <button class="btn btn-blue" onclick="addBudget()">📊 Imposta Budget</button>
+  </div>
+  <h2>Stato Budget — Mese Corrente</h2>
+  <div id="budget-list"></div>
+  <div id="monthly-summary"></div>
+</div>
+
+<!-- ════ DAY DETAIL MODAL ════ -->
+<div class="modal-overlay" id="day-modal" onclick="if(event.target===this)closeDayModal()">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// DATA LAYER
+// ════════════════════════════════════════════════════════════════════════════
+const CUR = '€';
+const MONTHS_IT = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+const DAYS_IT = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+
+function loadData(){
+  try{ return JSON.parse(localStorage.getItem('finance_data')) || defaultData(); }
+  catch(e){ return defaultData(); }
+}
+function defaultData(){ return {incomes:[],expenses:[],subscriptions:[],savings_goals:[],budgets:[]}; }
+function saveData(){ localStorage.setItem('finance_data', JSON.stringify(D)); }
+let D = loadData();
+let nextId = (arr) => arr.length ? Math.max(...arr.map(x=>x.id||0))+1 : 1;
+
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+function fmtDate(s){ const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; }
+function fmtMoney(n){ return CUR + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+
+// ════════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════════════════════
+function switchPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  renderAll();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CALENDAR
+// ════════════════════════════════════════════════════════════════════════════
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+
+function calPrev(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function getDayEvents(y,m,d){
+  const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  return {
+    incomes: D.incomes.filter(i=>i.date===ds),
+    expenses: D.expenses.filter(e=>e.date===ds),
+    subs: D.subscriptions.filter(s=>s.active!==false && s.day===d),
+    goals: D.savings_goals.filter(g=>g.deadline===ds)
+  };
+}
+
+function renderCalendar(){
+  const today = new Date();
+  const tStr = todayStr();
+
+  // ── Balance banner ──
+  const realInc = D.incomes.filter(i=>i.date<=tStr).reduce((s,i)=>s+i.amount,0);
+  const realExp = D.expenses.filter(e=>e.date<=tStr).reduce((s,e)=>s+e.amount,0);
+  const realSub = D.subscriptions.filter(s=>s.active!==false).reduce((s,x)=>s+x.amount,0);
+  const realBal = realInc - realExp - realSub;
+  const balColor = realBal >= 0 ? 'green' : 'red';
+  document.getElementById('balance-banner').innerHTML = `
+    <div class="balance-banner">
+      <div class="lbl">💰 Saldo reale ad oggi</div>
+      <div class="amt ${balColor}">${fmtMoney(realBal)}</div>
+      <div class="detail">entrate ${fmtMoney(realInc)} · uscite ${fmtMoney(realExp)} · abb. ${fmtMoney(realSub)}</div>
+    </div>`;
+
+  // ── Top metrics ──
+  const mInc = D.incomes.filter(i=>{const d=new Date(i.date);return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()}).reduce((s,i)=>s+i.amount,0);
+  const mExp = D.expenses.filter(e=>{const d=new Date(e.date);return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()}).reduce((s,e)=>s+e.amount,0);
+  const mSub = D.subscriptions.filter(s=>s.active!==false).reduce((s,x)=>s+x.amount,0);
+  const mNet = mInc - mExp - mSub;
+  document.getElementById('top-metrics').innerHTML = `
+    <div class="metric"><div class="label">Entrate Mese</div><div class="val green">${fmtMoney(mInc)}</div></div>
+    <div class="metric"><div class="label">Uscite Mese</div><div class="val red">${fmtMoney(mExp)}</div></div>
+    <div class="metric"><div class="label">Abbonamenti</div><div class="val yellow">${fmtMoney(mSub)}/m</div></div>
+    <div class="metric"><div class="label">Netto</div><div class="val ${mNet>=0?'green':'red'}">${fmtMoney(mNet)}</div></div>`;
+
+  // ── Month title ──
+  document.getElementById('cal-month-title').textContent = MONTHS_IT[calMonth]+' '+calYear;
+
+  // ── Grid ──
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const offset = (firstDay + 6) % 7; // Monday-based
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const isToday = (d) => d===today.getDate() && calMonth===today.getMonth() && calYear===today.getFullYear();
+
+  let html = DAYS_IT.map(d=>`<div class="cal-hdr">${d}</div>`).join('');
+  for(let i=0;i<offset;i++) html += '<div class="cal-cell empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const ev = getDayEvents(calYear, calMonth, d);
+    const cls = ['cal-cell'];
+    if(isToday(d)) cls.push('today');
+    let dots = '';
+    if(ev.incomes.length||ev.expenses.length||ev.subs.length||ev.goals.length){
+      dots = '<div class="cal-dots">';
+      if(ev.incomes.length) dots += '<span class="cal-dot i"></span>';
+      if(ev.expenses.length) dots += '<span class="cal-dot e"></span>';
+      if(ev.subs.length) dots += '<span class="cal-dot s"></span>';
+      if(ev.goals.length) dots += '<span class="cal-dot g"></span>';
+      dots += '</div>';
+    }
+    html += `<div class="${cls.join(' ')}" onclick="openDayModal(${calYear},${calMonth},${d})">${d}${dots}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+// ── Day modal ──
+function openDayModal(y,m,d){
+  const ev = getDayEvents(y,m,d);
+  const ds = `${d} ${MONTHS_IT[m]} ${y}`;
+  document.getElementById('modal-title').textContent = ds;
+  let html = '';
+  ev.incomes.forEach(i => html += `<div class="list-item"><div class="info"><div class="title">🟢 Entrata</div><div class="sub">${i.source||''} ${i.note||''}</div></div><div class="amount green">${fmtMoney(i.amount)}</div></div>`);
+  ev.expenses.forEach(e => html += `<div class="list-item"><div class="info"><div class="title">🔴 Uscita</div><div class="sub">${e.category||''} — ${e.note||''}</div></div><div class="amount red">${fmtMoney(e.amount)}</div></div>`);
+  ev.subs.forEach(s => html += `<div class="list-item"><div class="info"><div class="title">🟡 ${s.name}</div><div class="sub">${s.category||''}</div></div><div class="amount yellow">${fmtMoney(s.amount)}</div></div>`);
+  ev.goals.forEach(g => html += `<div class="list-item"><div class="info"><div class="title">🟣 Scadenza: ${g.name}</div><div class="sub">Obiettivo: ${fmtMoney(g.target)}</div></div></div>`);
+  if(!html) html = '<div class="empty-state">Nessun evento per questo giorno</div>';
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('day-modal').classList.add('show');
+}
+function closeDayModal(){ document.getElementById('day-modal').classList.remove('show'); }
+
+// ════════════════════════════════════════════════════════════════════════════
+// INCOME
+// ════════════════════════════════════════════════════════════════════════════
+function addIncome(){
+  const date = document.getElementById('inc-date').value;
+  const amount = parseFloat(document.getElementById('inc-amount').value);
+  const source = document.getElementById('inc-source').value.trim();
+  const note = document.getElementById('inc-note').value.trim();
+  if(!date||!amount||amount<=0) return alert('Inserisci data e importo validi');
+  D.incomes.push({id:nextId(D.incomes), date, amount, source, note});
+  saveData();
+  document.getElementById('inc-amount').value='';
+  document.getElementById('inc-source').value='';
+  document.getElementById('inc-note').value='';
+  renderIncome();
+}
+function deleteIncome(id){
+  if(!confirm('Eliminare questa entrata?')) return;
+  D.incomes = D.incomes.filter(i=>i.id!==id); saveData(); renderIncome();
+}
+function renderIncome(){
+  const sorted = [...D.incomes].sort((a,b)=>b.date.localeCompare(a.date));
+  let html = '';
+  if(!sorted.length){ html = '<div class="empty-state">Nessuna entrata registrata</div>'; }
+  else sorted.forEach(i=>{
+    html += `<div class="list-item">
+      <div class="info"><div class="title">${i.source||'Entrata'}</div><div class="sub">${fmtDate(i.date)} ${i.note?'· '+i.note:''}</div></div>
+      <div class="amount green">${fmtMoney(i.amount)}</div>
+      <button class="del-btn" onclick="deleteIncome(${i.id})">✕</button>
+    </div>`;
+  });
+  document.getElementById('income-list').innerHTML = html;
+
+  // Weekly summary
+  const weeks = {};
+  D.incomes.forEach(i=>{
+    const d = new Date(i.date);
+    const day = d.getDay();
+    const diff = (day + 6) % 7;
+    const monday = new Date(d); monday.setDate(d.getDate()-diff);
+    const key = monday.toISOString().split('T')[0];
+    weeks[key] = (weeks[key]||0) + i.amount;
+  });
+  const sortedWeeks = Object.entries(weeks).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,8);
+  let whtml = '';
+  sortedWeeks.forEach(([wk,total])=>{
+    const ws = new Date(wk);
+    const we = new Date(ws); we.setDate(ws.getDate()+6);
+    whtml += `<div class="list-item"><div class="info"><div class="title">${ws.getDate()}/${ws.getMonth()+1} – ${we.getDate()}/${we.getMonth()+1}/${we.getFullYear()}</div></div><div class="amount blue">${fmtMoney(total)}</div></div>`;
+  });
+  document.getElementById('income-weekly').innerHTML = whtml || '<div class="empty-state">Nessun dato</div>';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EXPENSES
+// ════════════════════════════════════════════════════════════════════════════
+function addExpense(){
+  const date = document.getElementById('exp-date').value;
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const category = document.getElementById('exp-cat').value;
+  const note = document.getElementById('exp-note').value.trim();
+  if(!date||!amount||amount<=0) return alert('Inserisci data e importo validi');
+  D.expenses.push({id:nextId(D.expenses), date, amount, category, note});
+  saveData();
+  document.getElementById('exp-amount').value='';
+  document.getElementById('exp-note').value='';
+  renderExpenses();
+}
+function deleteExpense(id){
+  if(!confirm('Eliminare questa uscita?')) return;
+  D.expenses = D.expenses.filter(e=>e.id!==id); saveData(); renderExpenses();
+}
+function renderExpenses(){
+  const sorted = [...D.expenses].sort((a,b)=>b.date.localeCompare(a.date));
+  let html = '';
+  if(!sorted.length){ html = '<div class="empty-state">Nessuna uscita registrata</div>'; }
+  else sorted.forEach(e=>{
+    html += `<div class="list-item">
+      <div class="info"><div class="title">${e.category||'Uscita'}</div><div class="sub">${fmtDate(e.date)} ${e.note?'· '+e.note:''}</div></div>
+      <div class="amount red">${fmtMoney(e.amount)}</div>
+      <button class="del-btn" onclick="deleteExpense(${e.id})">✕</button>
+    </div>`;
+  });
+  document.getElementById('expense-list').innerHTML = html;
+
+  // Category breakdown
+  const today = new Date();
+  const cats = {};
+  D.expenses.forEach(e=>{
+    const d = new Date(e.date);
+    if(d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth())
+      cats[e.category] = (cats[e.category]||0) + e.amount;
+  });
+  const maxVal = Math.max(...Object.values(cats),1);
+  let chtml = '';
+  Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([cat,total])=>{
+    const pct = (total/maxVal)*100;
+    chtml += `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:.82rem"><span>${cat}</span><span style="font-family:'JetBrains Mono',monospace">${fmtMoney(total)}</span></div>
+      <div class="progress-bg"><div class="progress-fill" style="width:${pct}%;background:var(--red)"></div></div>
+    </div>`;
+  });
+  document.getElementById('expense-cats').innerHTML = chtml || '<div class="empty-state">Nessuna spesa questo mese</div>';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SUBSCRIPTIONS
+// ════════════════════════════════════════════════════════════════════════════
+function addSub(){
+  const name = document.getElementById('sub-name').value.trim();
+  const amount = parseFloat(document.getElementById('sub-amount').value);
+  const day = parseInt(document.getElementById('sub-day').value)||1;
+  const category = document.getElementById('sub-cat').value;
+  if(!name||!amount||amount<=0) return alert('Inserisci nome e importo');
+  D.subscriptions.push({id:nextId(D.subscriptions), name, amount, day, category, active:true});
+  saveData();
+  document.getElementById('sub-name').value='';
+  document.getElementById('sub-amount').value='';
+  renderSubs();
+}
+function toggleSub(id){
+  const s = D.subscriptions.find(x=>x.id===id);
+  if(s) s.active = !s.active;
+  saveData(); renderSubs();
+}
+function deleteSub(id){
+  if(!confirm('Eliminare questo abbonamento?')) return;
+  D.subscriptions = D.subscriptions.filter(s=>s.id!==id); saveData(); renderSubs();
+}
+function renderSubs(){
+  const total = D.subscriptions.filter(s=>s.active!==false).reduce((s,x)=>s+x.amount,0);
+  document.getElementById('subs-total').innerHTML = D.subscriptions.length ?
+    `<strong>Totale: ${fmtMoney(total)}/mese</strong> · ${fmtMoney(total*12)}/anno` : '';
+  let html = '';
+  if(!D.subscriptions.length){ html = '<div class="empty-state">Nessun abbonamento</div>'; }
+  else D.subscriptions.forEach(s=>{
+    const inactive = s.active===false;
+    html += `<div class="list-item" style="${inactive?'opacity:.5':''}">
+      <div class="info">
+        <div class="title">${inactive?'⏸️':'✅'} ${s.name}</div>
+        <div class="sub">${s.category||''} · giorno ${s.day}</div>
+      </div>
+      <div class="amount yellow">${fmtMoney(s.amount)}</div>
+      <div class="toggle ${inactive?'':'on'}" onclick="toggleSub(${s.id})" style="margin-left:8px"></div>
+      <button class="del-btn" onclick="deleteSub(${s.id})">✕</button>
+    </div>`;
+  });
+  document.getElementById('subs-list').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SAVINGS GOALS
+// ════════════════════════════════════════════════════════════════════════════
+function addGoal(){
+  const name = document.getElementById('goal-name').value.trim();
+  const target = parseFloat(document.getElementById('goal-target').value);
+  const deadline = document.getElementById('goal-deadline').value;
+  const note = document.getElementById('goal-note').value.trim();
+  if(!name||!target||target<=0||!deadline) return alert('Compila tutti i campi');
+  D.savings_goals.push({id:nextId(D.savings_goals), name, target, current:0, deadline, note});
+  saveData();
+  document.getElementById('goal-name').value='';
+  document.getElementById('goal-target').value='';
+  document.getElementById('goal-note').value='';
+  renderGoals();
+}
+function addSaving(){
+  const gid = parseInt(document.getElementById('save-goal').value);
+  const amt = parseFloat(document.getElementById('save-amount').value);
+  if(!amt||amt<=0) return alert('Inserisci un importo');
+  const g = D.savings_goals.find(x=>x.id===gid);
+  if(g) g.current += amt;
+  saveData();
+  document.getElementById('save-amount').value='';
+  renderGoals();
+}
+function deleteGoal(id){
+  if(!confirm('Eliminare questo obiettivo?')) return;
+  D.savings_goals = D.savings_goals.filter(g=>g.id!==id); saveData(); renderGoals();
+}
+function renderGoals(){
+  const today = new Date();
+  let html = '';
+  if(!D.savings_goals.length){ html = '<div class="empty-state">Nessun obiettivo. Creane uno!</div>'; }
+  else D.savings_goals.forEach(g=>{
+    const pct = Math.min((g.current/g.target)*100,100);
+    const remaining = Math.max(g.target - g.current, 0);
+    const deadline = new Date(g.deadline);
+    const daysLeft = Math.max(Math.ceil((deadline-today)/(1000*60*60*24)),0);
+    const weeksLeft = Math.max(daysLeft/7, 1);
+    const monthsLeft = Math.max(daysLeft/30.44, 1);
+    const weeklyNeeded = remaining > 0 ? remaining / weeksLeft : 0;
+    const monthlyNeeded = remaining > 0 ? remaining / monthsLeft : 0;
+
+    let barColor = 'var(--red)';
+    let status = `📅 ${daysLeft} giorni`;
+    if(pct>=100){ barColor='var(--green)'; status='✅ Completato!'; }
+    else if(pct>=60){ barColor='var(--blue)'; }
+    else if(pct>=30){ barColor='var(--yellow)'; }
+
+    html += `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div><div style="font-weight:600">🎯 ${g.name}</div><div style="font-size:.72rem;color:var(--muted);margin-top:2px">${g.note||''}</div></div>
+        <div style="text-align:right">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--purple)">${fmtMoney(g.current)} <span style="color:var(--muted);font-size:.72rem">/ ${fmtMoney(g.target)}</span></div>
+          <div style="font-size:.7rem;color:var(--muted)">${status}</div>
+        </div>
+      </div>
+      <div class="progress-bg"><div class="progress-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <div class="weekly-box">
+        Mancano <strong>${fmtMoney(remaining)}</strong> — risparmiare <strong>${fmtMoney(weeklyNeeded)}/settimana</strong>
+        <span style="color:var(--muted);font-size:.7rem">(${fmtMoney(monthlyNeeded)}/mese · ${Math.round(weeksLeft)} sett.)</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:.7rem;color:var(--muted)">
+        <span>${pct.toFixed(1)}%</span>
+        <span>Scadenza: ${fmtDate(g.deadline)}</span>
+        <button class="del-btn" onclick="deleteGoal(${g.id})" style="font-size:.8rem">🗑️</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('goals-list').innerHTML = html;
+
+  // Add savings section
+  const sec = document.getElementById('add-savings-section');
+  if(D.savings_goals.length){
+    sec.style.display = 'block';
+    document.getElementById('save-goal').innerHTML = D.savings_goals.map(g=>
+      `<option value="${g.id}">${g.name} (${fmtMoney(g.current)}/${fmtMoney(g.target)})</option>`
+    ).join('');
+  } else { sec.style.display = 'none'; }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BUDGET
+// ════════════════════════════════════════════════════════════════════════════
+function addBudget(){
+  const category = document.getElementById('bud-cat').value;
+  const limit = parseFloat(document.getElementById('bud-limit').value);
+  if(!limit||limit<=0) return alert('Inserisci un limite');
+  const existing = D.budgets.find(b=>b.category===category);
+  if(existing) existing.monthly_limit = limit;
+  else D.budgets.push({id:nextId(D.budgets), category, monthly_limit:limit});
+  saveData();
+  document.getElementById('bud-limit').value='';
+  renderBudget();
+}
+function deleteBudget(id){
+  if(!confirm('Eliminare questo budget?')) return;
+  D.budgets = D.budgets.filter(b=>b.id!==id); saveData(); renderBudget();
+}
+function renderBudget(){
+  const today = new Date();
+  const catSpent = {};
+  D.expenses.forEach(e=>{
+    const d = new Date(e.date);
+    if(d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth())
+      catSpent[e.category] = (catSpent[e.category]||0) + e.amount;
+  });
+
+  let html = '';
+  if(!D.budgets.length){ html = '<div class="empty-state">Nessun budget impostato</div>'; }
+  else D.budgets.forEach(b=>{
+    const spent = catSpent[b.category]||0;
+    const pct = Math.min((spent/b.monthly_limit)*100,100);
+    const rem = b.monthly_limit - spent;
+    let barColor, tagClass, tagText;
+    if(pct>=90){ barColor='var(--red)'; tagClass='tag-danger'; tagText='⚠️ Quasi esaurito'; }
+    else if(pct>=60){ barColor='var(--yellow)'; tagClass='tag-warn'; tagText='Attenzione'; }
+    else { barColor='var(--green)'; tagClass='tag-ok'; tagText='OK'; }
+
+    html += `<div class="budget-item card">
+      <div class="budget-header"><span class="cat">${b.category}</span><span class="budget-tag ${tagClass}">${tagText}</span>
+        <button class="del-btn" onclick="deleteBudget(${b.id})" style="font-size:.8rem">✕</button>
+      </div>
+      <div class="progress-bg"><div class="progress-fill" style="width:${pct}%;background:${barColor}"></div></div>
+      <div class="budget-nums"><span>Speso: ${fmtMoney(spent)}</span><span>Limite: ${fmtMoney(b.monthly_limit)}</span><span style="color:${rem>=0?'var(--green)':'var(--red)'}">Rimangono: ${fmtMoney(rem)}</span></div>
+    </div>`;
+  });
+  document.getElementById('budget-list').innerHTML = html;
+
+  // Monthly summary
+  const mInc = D.incomes.filter(i=>{const d=new Date(i.date);return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()}).reduce((s,i)=>s+i.amount,0);
+  const mExp = D.expenses.filter(e=>{const d=new Date(e.date);return d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()}).reduce((s,e)=>s+e.amount,0);
+  const mSub = D.subscriptions.filter(s=>s.active!==false).reduce((s,x)=>s+x.amount,0);
+  const mNet = mInc - mExp - mSub;
+  const savRate = mInc > 0 ? ((mNet/mInc)*100).toFixed(1) : '0.0';
+  const srColor = savRate >= 20 ? 'green' : (savRate >= 0 ? 'yellow' : 'red');
+
+  document.getElementById('monthly-summary').innerHTML = `
+    <h2>📋 Riepilogo Mensile</h2>
+    <div class="metric-row">
+      <div class="metric"><div class="label">Entrate</div><div class="val green">${fmtMoney(mInc)}</div></div>
+      <div class="metric"><div class="label">Uscite + Abb.</div><div class="val red">${fmtMoney(mExp+mSub)}</div></div>
+    </div>
+    <div class="metric" style="margin-bottom:10px"><div class="label">Tasso di Risparmio</div><div class="val ${srColor}">${savRate}%</div></div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RENDER ALL
+// ════════════════════════════════════════════════════════════════════════════
+function renderAll(){
+  renderCalendar(); renderIncome(); renderExpenses(); renderSubs(); renderGoals(); renderBudget();
+}
+
+// ── Init ──
+document.getElementById('today-label').textContent = new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('inc-date').value = todayStr();
+document.getElementById('exp-date').value = todayStr();
+const nextYear = new Date(); nextYear.setFullYear(nextYear.getFullYear()+1);
+document.getElementById('goal-deadline').value = nextYear.toISOString().split('T')[0];
+renderAll();
+</script>
+</body>
+</html>
