@@ -1,0 +1,124 @@
+{
+ "meta": {
+  "generato_il": "2026-11-10",
+  "previsione_alla_chiusura_del": "2026-11-09",
+  "ultimo_prezzo": 7549.94,
+  "data_ultimo_prezzo": "2026-11-09",
+  "storico_prezzi_fino_al": "2026-10-21",
+  "n_variabili": 109,
+  "train_dal": "1990-01-02",
+  "test_dal": 2005,
+  "variabili_non_aggiornate": [
+   "ext_cloud_anomaly",
+   "ext_cloud_anomaly_5d",
+   "ext_geomagnetic_6d",
+   "ext_geomagnetic_storm",
+   "news_epu_30d_vs_1y",
+   "news_epu_spike",
+   "news_epu_vs_1y",
+   "news_gpr_30d_vs_1y",
+   "news_gpr_7d_vs_1y",
+   "news_sentiment",
+   "news_sentiment_chg30",
+   "news_sentiment_chg90",
+   "news_trump_market_posts5",
+   "news_trump_surge",
+   "news_trump_trade_posts5",
+   "sog_naaim",
+   "sog_naaim_chg4w",
+   "sog_senators_activity90",
+   "sog_senators_netbuy90",
+   "tc_baa_aaa",
+   "tc_baa_aaa_chg21",
+   "tc_curve_10y3m",
+   "tc_y3m_chg63"
+  ]
+ },
+ "previsioni": {
+  "1": {
+   "orizzonte": "1 giorno",
+   "giorni_di_borsa": 1,
+   "abilita_dimostrata": true,
+   "gruppi_usati": [
+    "cal",
+    "vix"
+   ],
+   "rendimento_atteso": 0.000753,
+   "rendimento_medio_storico": 0.000331,
+   "prob_rialzo": 0.554135,
+   "quota_storica_rialzi": 0.53647,
+   "q10": -0.025176,
+   "q90": 0.023869,
+   "prezzo_atteso": 7555.629715,
+   "prezzo_q10": 7362.235013,
+   "prezzo_q90": 7732.31851,
+   "contributo_gruppi": {
+    "cal": 0.000128,
+    "vix": 0.000281
+   },
+   "spinte_al_rialzo": {
+    "vix_chg5": 0.0003,
+    "vix_pct_1y": 0.00021,
+    "cal_earnings_season": 0.000128,
+    "cal_post_election": 6.1e-05,
+    "cal_halloween": 2.4e-05,
+    "cal_month_cos": 2.2e-05
+   },
+   "spinte_al_ribasso": {
+    "vix_chg21": -0.000183,
+    "vix_vs_3m": -5.6e-05,
+    "cal_days_to_fomc": -3.7e-05,
+    "cal_month_first": -3.2e-05,
+    "cal_tom": -1.6e-05,
+    "cal_monday": -1.3e-05
+   }
+  },
+  "5": {
+   "orizzonte": "1 settimana",
+   "giorni_di_borsa": 5,
+   "abilita_dimostrata": true,
+   "gruppi_usati": [
+    "vix"
+   ],
+   "rendimento_atteso": 0.003536,
+   "rendimento_medio_storico": 0.00166,
+   "prob_rialzo": 0.615245,
+   "quota_storica_rialzi": 0.576965,
+   "q10": -0.038418,
+   "q90": 0.038324,
+   "prezzo_atteso": 7576.686279,
+   "prezzo_q10": 7265.38513,
+   "prezzo_q90": 7844.896927,
+   "contributo_gruppi": {
+    "vix": 0.001761
+   },
+   "spinte_al_rialzo": {
+    "vix_pct_1y": 0.001516,
+    "vix_chg5": 0.000897,
+    "vix_vs_3m": 0.000362
+   },
+   "spinte_al_ribasso": {
+    "vix_chg21": -0.000711,
+    "vix_level": -0.000303
+   }
+  },
+  "21": {
+   "orizzonte": "1 mese",
+   "giorni_di_borsa": 21,
+   "abilita_dimostrata": false,
+   "gruppi_usati": [],
+   "rendimento_atteso": 0.007093,
+   "rendimento_medio_storico": 0.007093,
+   "prob_rialzo": 0.639598,
+   "quota_storica_rialzi": 0.639598,
+   "q10": -0.062396,
+   "q90": 0.073439,
+   "prezzo_atteso": 7603.680682,
+   "prezzo_q10": 7093.248906,
+   "prezzo_q90": 8125.263722,
+   "contributo_gruppi": {},
+   "spinte_al_rialzo": {},
+   "spinte_al_ribasso": {}
+  }
+ }
+}
